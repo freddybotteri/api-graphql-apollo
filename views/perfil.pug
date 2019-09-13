@@ -1,0 +1,184 @@
+extends layoutAdmin.pug
+  
+block content
+	h1 perfil.
+	#perfilPage.container
+		.form-group.row
+			label.col-sm-2.col-form-label(for='staticEmail') Descripcion
+			.col-sm-11
+				input#descripcion.form-control.form-control-sm(type='text', placeholder='Nombre')
+
+
+		.btn-group(role='group')
+			button#guardarPerfil.btn.btn-primary(type='button') GUARDAR
+			button#updatePerfil.btn.btn-primary(type='button') ACTUALIZAR
+	hr
+
+
+	table#tablaUsuarios.table.table-bordered.table-dark
+		thead
+			tr
+				th(scope='col') #
+				th(scope='col') Descripcion
+
+		tbody
+block script
+	script(type="text/babel" src='https://unpkg.com/apollo-link-ws@1.0.18/lib/index.js')
+	script(type="text/babel" src='https://unpkg.com/subscriptions-transport-ws@0.9.16/dist/client.js')
+	script(type="text/babel" src='https://unpkg.com/apollo-client@2.6.3/bundle.umd.js')
+
+	script.
+		function stschange(valuests,id){
+
+
+			if(valuests == 0){
+				valuests = 1;
+			}else{
+				valuests = 0;
+			}
+			axios.post(
+			'http://localhost:4000/graphql',
+			{
+				query: `
+					mutation updatePerfilsts($id:Int!,$sts: Int) {
+						updatePerfilsts(pefId:$id,sts: $sts) {
+						  pef_nid
+						}
+					}
+				`,
+				variables: {id:id,sts:valuests},
+				
+			}, {
+			    headers: {
+			      'Content-Type': 'application/json'
+			    }
+			  })
+			.then(res => console.log(res))
+			.catch(err => console.log(err));
+
+
+		}
+		$( document ).ready(function() {
+
+			
+			
+
+			console.log( "ready!" );
+			axios.post(
+			'http://localhost:4000/graphql',
+			{
+				query: `
+					query  {
+						getPerfiles {
+							pef_nid
+							pef_vdescripcion
+							pef_sts
+
+						}
+					}
+				`	
+			}, {
+			    headers: {
+			      'Content-Type': 'application/json'
+			    }
+			  })
+			.then(res => {
+							console.log(res.data.data.getPerfiles)
+
+							var data =res.data.data.getPerfiles;
+							var table = $("<tbody/>");
+							$.each(data, function(rowIndex, r) {
+								var row = $("<tr/>");
+
+								var idperfiltemp = 0;
+								$.each(r, function(colIndex, c) { 
+									
+									
+									if(colIndex == 'pef_nid'){
+										idperfiltemp = c;
+									}
+									if(colIndex == 'pef_sts'){
+										//row.append($("<t"+(rowIndex == 0 ?  "h" : "d")+"/>").text(c));
+										if(c == 1){
+											row.append("<td><button id='stsid' class='btnables  btn btn-warning' onclick='stschange("+c+","+idperfiltemp+")'>Inabilitar</button></td>");
+										}else{
+											row.append("<td><button id='stsid' class='btnables btn btn-success' onclick='stschange("+c+","+idperfiltemp+")'>Habilitar</button></td>");
+										}
+										
+									}else{
+										row.append($("<t"+(rowIndex == 0 ?  "h" : "d")+"/>").text(c));
+									}
+									
+								});
+								table.append(row);
+							});
+							$("#tablaUsuarios").append(table);
+						}
+				)
+			.catch(err => console.log(err));
+		});
+
+		
+
+
+		$('#guardarPerfil').click((e) => {
+			e.preventDefault()
+
+
+			axios.post(
+			'http://localhost:4000/graphql',
+			{
+				query: `
+					mutation createPerfil($input: PerfilInput) {
+						createPerfil(input: $input) {
+						  pef_nid
+						}
+					}
+				`,
+				variables: {input:{
+					pef_vdescripcion: $("#descripcion").val(),
+					cia_nid: 1
+
+				}},
+				
+			}, {
+			    headers: {
+			      'Content-Type': 'application/json'
+			    }
+			  })
+			.then(res => console.log(res))
+			.catch(err => console.log(err));
+		}) 
+
+
+		$('#updatePerfil').click((e) => {
+			e.preventDefault()
+
+
+			axios.post(
+			'http://localhost:4000/graphql',
+			{
+				query: `
+					mutation updatePerfil($id:Int!,$input: PerfilInput) {
+						updatePerfil(pefId:$id,input: $input) {
+						  pef_nid
+						}
+					}
+				`,
+				variables: {id:2,input:{
+					pef_vdescripcion: $("#descripcion").val(),
+					cia_nid: 1
+
+				}},
+				
+			}, {
+			    headers: {
+			      'Content-Type': 'application/json'
+			    }
+			  })
+			.then(res => console.log(res))
+			.catch(err => console.log(err));
+		}) 
+			
+			
+
